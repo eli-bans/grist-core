@@ -8,6 +8,16 @@ if (window._gristAppLoaded) {
 }
 window._gristAppLoaded = true;
 
+// Polyfill setImmediate for browsers (it's a Node.js API)
+if (typeof setImmediate === 'undefined') {
+  window.setImmediate = function(callback, ...args) {
+    return setTimeout(callback, 0, ...args);
+  };
+  window.clearImmediate = function(id) {
+    return clearTimeout(id);
+  };
+}
+
 const {setupLocale} = require("./lib/localization");
 
 const {AppImpl} = require("./ui/App");
