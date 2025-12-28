@@ -9,6 +9,7 @@ import {
   Disposable,
   dom,
   DomContents,
+  IDomComponent,
   Observable,
   styled,
 } from "grainjs";
@@ -20,7 +21,7 @@ const t = makeT("ChatPanel");
  * It displays on the right side of the document and allows users to interact
  * with AI assistance in a conversational manner.
  */
-export class ChatPanel extends Disposable {
+export class ChatPanel extends Disposable implements IDomComponent {
   private _messages = Observable.create<ChatMessage[]>(this, []);
   private _inputText = Observable.create(this, "");
   private _thinking = Observable.create(this, false);
@@ -72,11 +73,11 @@ export class ChatPanel extends Disposable {
       dom.forEach(this._messages, msg => this._buildMessage(msg)),
       dom.maybe(this._thinking, () => this._buildThinkingIndicator()),
       // Invisible element to scroll to
-      dom("div", elem => this._messagesEndRef = elem),
+      cssScrollAnchor((elem) => { this._messagesEndRef = elem; }),
     );
   }
 
-  private _buildMessage(msg: ChatMessage): DomContents {
+  private _buildMessage(msg: ChatMessage): Element {
     const isUser = msg.sender === "user";
 
     return cssMessage(
@@ -554,7 +555,7 @@ const cssChatInput = styled("textarea", `
   flex: 1;
   border: none;
   outline: none;
-  background: transparent;
+  background-color: ${theme.inputBg};
   color: ${theme.inputFg};
   font-size: 14px;
   line-height: 1.5;
@@ -598,4 +599,9 @@ const cssInputHint = styled("div", `
   font-size: 12px;
   color: ${theme.lightText};
   text-align: center;
+`);
+
+const cssScrollAnchor = styled("div", `
+  height: 0;
+  overflow: hidden;
 `);
