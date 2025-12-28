@@ -97,9 +97,9 @@ export function tools(owner: Disposable, gristDoc: GristDoc, leftPanelOpen: Obse
     cssPageEntry(
       cssPageEntry.cls("-selected", use => use(gristDoc.activeViewId) === "data"),
       cssPageLink(
-        cssPageIcon("Database"),
-        cssLinkText(t("Raw data")),
-        testId("raw"),
+        cssPageIcon("Robot"),
+        cssLinkText(t("Agent Mode")),
+        testId("agent-mode"),
         urlState().setLinkUrl({ docPage: "data" }),
       ),
     ),

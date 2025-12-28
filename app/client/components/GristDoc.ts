@@ -5,6 +5,7 @@
 import { AccessRules } from "app/client/aclui/AccessRules";
 import { ActionCounter } from "app/client/components/ActionCounter";
 import { ActionLog } from "app/client/components/ActionLog";
+import { AgentModePage } from "app/client/components/AgentModePage";
 import BaseView from "app/client/components/BaseView";
 import { isNumericLike, isNumericOnly } from "app/client/components/ChartView";
 import { CodeEditorPanel } from "app/client/components/CodeEditorPanel";
@@ -16,7 +17,7 @@ import { EditorMonitor } from "app/client/components/EditorMonitor";
 import { buildDefaultFormLayout } from "app/client/components/Forms/FormView";
 import GridView from "app/client/components/GridView";
 import { importFromFile, selectAndImport } from "app/client/components/Importer";
-import { RawDataPage, RawDataPopup } from "app/client/components/RawDataPage";
+import { RawDataPopup } from "app/client/components/RawDataPage";
 import { RecordCardPopup } from "app/client/components/RecordCardPopup";
 import { RegionFocusSwitcher } from "app/client/components/RegionFocusSwitcher";
 import { ActionGroupWithCursorPos, UndoStack } from "app/client/components/UndoStack";
@@ -43,6 +44,7 @@ import { getUserOrgPrefObs, getUserOrgPrefsObs, markAsSeen } from "app/client/mo
 import { UserPresenceModel, UserPresenceModelImpl } from "app/client/models/UserPresenceModel";
 import { App } from "app/client/ui/App";
 import { showCustomWidgetGallery } from "app/client/ui/CustomWidgetGallery";
+import { ChatPanel } from "app/client/ui/ChatPanel";
 import { DocHistory } from "app/client/ui/DocHistory";
 import { startDocTour } from "app/client/ui/DocTour";
 import { DocTutorial } from "app/client/ui/DocTutorial";
@@ -133,7 +135,7 @@ export interface TabOptions {
   category?: any;
 }
 
-const RightPanelTool = StringUnion("none", "docHistory", "validations", "discussion");
+const RightPanelTool = StringUnion("none", "docHistory", "validations", "discussion", "aiChat");
 
 export interface IExtraTool {
   icon: IconName;
@@ -320,6 +322,7 @@ export class GristDocImpl extends DisposableWithEvents implements GristDoc {
   private _rightPanelTabs = new Map<string, TabContent[]>();
   private _docHistory: DocHistory;
   private _discussionPanel: DiscussionPanel;
+  private _chatPanel: ChatPanel;
   private _rightPanelTool = createSessionObs(this, "rightPanelTool", "none", RightPanelTool.guard);
   private _showGristTour = getUserOrgPrefObs(this.userOrgPrefs, "showGristTour");
   private _seenDocTours = getUserOrgPrefObs(this.userOrgPrefs, "seenDocTours");
@@ -632,6 +635,7 @@ export class GristDocImpl extends DisposableWithEvents implements GristDoc {
     }
     this._docHistory = DocHistory.create(this, this.docPageModel, this._actionLog);
     this._discussionPanel = DiscussionPanel.create(this, this);
+    this._chatPanel = ChatPanel.create(this, this);
 
     // Tap into docData's sendActions method to save the cursor position with every action, so that
     // undo/redo can jump to the right place.
@@ -670,6 +674,10 @@ export class GristDocImpl extends DisposableWithEvents implements GristDoc {
       createForm: this._onCreateForm.bind(this),
       pushUndoAction: this._undoStack.pushAction.bind(this._undoStack),
       activateAssistant: () => this._assistantPopup?.open(),
+      openAIChat: () => {
+        this.showTool("aiChat");
+        allCommands.rightPanelOpen.run();
+      },
     }, this, true));
 
     this.userPresenceModel.initialize().catch(reportError);
@@ -826,7 +834,7 @@ export class GristDocImpl extends DisposableWithEvents implements GristDoc {
         return  (
           content === "code" ? dom.create(CodeEditorPanel, this) :
             content === "acl" ? dom.create(AccessRules, this) :
-              content === "data" ? dom.create(RawDataPage, this) :
+              content === "data" ? dom.create(AgentModePage, this) :
                 content === "suggestions" ? dom.create(ProposedChangesPage, this) :
                   content === "settings" ? dom.create(DocSettingsPage, this) :
                     content === "webhook" ? dom.create(WebhookPage, this) :
@@ -1763,6 +1771,9 @@ Please check webhooks settings, remove invalid webhooks, and clean the queue."))
       }
       case "discussion": {
         return { icon: "Chat", label: this._discussionPanel.buildMenu(), content: this._discussionPanel };
+      }
+      case "aiChat": {
+        return { icon: "ChatWithCircle", label: "AI Assistant", content: this._chatPanel };
       }
       case "none":
       default: {

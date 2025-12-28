@@ -526,7 +526,7 @@ const cssRightPane = styled(cssVBox, `
   margin-left: 0px;
   overflow: hidden;
   transition: margin-left 0.4s;
-  z-index: 0;
+  z-index: 2;
   @media ${mediaSmall} {
     & {
       width: 240px;

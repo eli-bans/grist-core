@@ -155,6 +155,8 @@ export function createTopBarDoc(owner: MultiHolder, appModel: AppModel, pageMode
     dom.maybe(use => !(use(pageModel.isTemplate) && isAnonymous), () => [
       buildShareMenuButton(pageModel),
       dom.maybe(pageModel.gristDoc,
+        gristDoc => buildShowAgentModeButton(gristDoc)),
+      dom.maybe(pageModel.gristDoc,
         gristDoc => buildShowDiscussionButton(gristDoc)),
       dom.update(
         buildNotifyMenuButton(appModel.notifier, appModel),
@@ -163,6 +165,18 @@ export function createTopBarDoc(owner: MultiHolder, appModel: AppModel, pageMode
     ]),
     dom("div", dom.create(AccountWidget, appModel, pageModel)),
   ];
+}
+
+function buildShowAgentModeButton(gristDoc: GristDoc) {
+  return cssHoverCircle({ style: `margin: 5px; position: relative;` },
+    cssTopBarBtn("Robot", dom.cls("tour-agent-mode-icon")),
+    hoverTooltip("AI Assistant", { key: "topBarBtnTooltip" }),
+    testId("open-ai-assistant"),
+    dom.on("click", () => {
+      gristDoc.showTool("aiChat");
+      allCommands.rightPanelOpen.run();
+    }),
+  );
 }
 
 function buildShowDiscussionButton(gristDoc: GristDoc) {

@@ -299,6 +299,11 @@ export const groups: CommendGroupDef[] = [{
       desc: () => t("Activate assistant"),
     },
     {
+      name: "openAIChat",
+      keys: ["Mod+Shift+L"],
+      desc: () => t("Open AI Chat Assistant"),
+    },
+    {
       name: "showPopup",
       keys: [],
       desc: () => t("showing a behavioral popup"),
